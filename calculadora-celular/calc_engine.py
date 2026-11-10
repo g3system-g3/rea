@@ -298,6 +298,87 @@ class Calculator:
         self.expr = ""
         self.just_evaluated = False
 
+    def clear_entry(self):
+        """CE: apaga só o número que está sendo digitado."""
+        if self.just_evaluated:
+            self.clear()
+            return
+        end = len(self.expr)
+        if self.expr.endswith(PERCENT):
+            end -= 1
+        i = self._number_start_before(end)
+        if i > 0 and self.expr[i - 1] == MINUS and (i == 1 or self.expr[i - 2] in BINARY_OPS):
+            i -= 1
+        self.expr = self.expr[:i]
+
+    def _number_start_before(self, end: int) -> int:
+        i = end
+        while i > 0 and (self.expr[i - 1].isdigit() or self.expr[i - 1] == DECIMAL_SEP):
+            i -= 1
+        return i
+
+    def _current_number_span(self):
+        """(início, fim) do último número, incluindo '−' unário e '%'."""
+        end = len(self.expr)
+        if self.expr.endswith(PERCENT):
+            end -= 1
+        start = self._number_start_before(end)
+        if start == end:
+            return None
+        if start > 0 and self.expr[start - 1] == MINUS and (start == 1 or self.expr[start - 2] in BINARY_OPS):
+            start -= 1
+        return start, len(self.expr)
+
+    def apply_function(self, name: str) -> bool:
+        """Aplica 1/x, x² ou √x ao número atual. Retorna False se der erro."""
+        span = self._current_number_span()
+        if span is None:
+            return True
+        start, end = span
+        piece = self.expr[start:end]
+        # após "=", ou com um número só na tela, aplica sobre o valor inteiro
+        if self.just_evaluated or start == 0:
+            piece, start = self.expr, 0
+        try:
+            value = evaluate(piece)
+            if name == "inv":
+                if value == 0:
+                    return False
+                result = 1 / value
+            elif name == "sqr":
+                result = value * value
+            elif name == "sqrt":
+                if value < 0:
+                    return False
+                result = value.sqrt()
+            else:
+                raise ValueError(name)
+        except CalcError:
+            return False
+        self.expr = self.expr[:start] + to_input(result).replace("-", MINUS)
+        return True
+
+    def current_value(self) -> Decimal:
+        """Valor que está na tela (para a memória)."""
+        try:
+            return evaluate(trim_incomplete(self.expr)) if self.expr else Decimal(0)
+        except CalcError:
+            return Decimal(0)
+
+    def insert_value(self, value: Decimal):
+        """Coloca um valor (ex.: da memória) como número atual."""
+        text = to_input(value).replace("-", MINUS)
+        if self.just_evaluated or not self.expr:
+            self.expr = text
+            self.just_evaluated = True
+            return
+        span = self._current_number_span()
+        if span is not None:
+            self.expr = self.expr[: span[0]]
+        if self.expr.endswith(PERCENT):
+            self.expr += TIMES
+        self.expr += text
+
     def preview(self) -> str:
         """Resultado ao vivo mostrado abaixo da conta (como no celular)."""
         expr = trim_incomplete(self.expr)
