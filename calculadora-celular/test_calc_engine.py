@@ -112,5 +112,32 @@ class Buttons(unittest.TestCase):
         self.assertEqual(c.equals(), "Erro")
 
 
+class ExtraKeys(unittest.TestCase):
+    def test_ce(self):
+        c = press("100+58")
+        c.clear_entry()
+        self.assertEqual(c.expr, "100+")
+
+    def test_funcoes(self):
+        c = press("9")
+        c.apply_function("sqrt")
+        self.assertEqual(c.expr, "3")
+        c = press("100+4")
+        c.apply_function("sqr")
+        self.assertEqual(c.expr, "100+16")
+        c = press("4")
+        c.apply_function("inv")
+        self.assertEqual(c.expr, "0,25")
+        c = press("0")
+        self.assertFalse(c.apply_function("inv"))
+
+    def test_memoria(self):
+        c = press("100+158%")
+        self.assertEqual(c.current_value(), Decimal(258))
+        c = press("5+")
+        c.insert_value(Decimal(258))
+        self.assertEqual(c.expr, "5+258")
+
+
 if __name__ == "__main__":
     unittest.main()
