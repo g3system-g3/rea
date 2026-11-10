@@ -2,14 +2,14 @@
 
 Calculadora para Windows que faz porcentagem igual ao celular.
 
-| Conta        | Resultado | Como é calculado        |
-|--------------|-----------|-------------------------|
-| 100 + 158%   | 258       | 100 + 100 × 158 / 100   |
-| 100 + 110%   | 210       | 100 + 100 × 110 / 100   |
-| 200 − 10%    | 180       | 200 − 200 × 10 / 100    |
-| 200 × 10%    | 20        | 200 × 10 / 100          |
-| 50 ÷ 10%     | 500       | 50 ÷ (10 / 100)         |
-| 100 + 10% + 10% | 121    | cada % vale sobre o total até ali |
+| Conta           | Resultado | Como é calculado                  |
+| --------------- | --------- | --------------------------------- |
+| 100 + 158%      | 258       | 100 + 100 × 158 / 100             |
+| 100 + 110%      | 210       | 100 + 100 × 110 / 100             |
+| 200 − 10%       | 180       | 200 − 200 × 10 / 100              |
+| 200 × 10%       | 20        | 200 × 10 / 100                    |
+| 50 ÷ 10%        | 500       | 50 ÷ (10 / 100)                   |
+| 100 + 10% + 10% | 121       | cada % vale sobre o total até ali |
 
 Visual igual ao da calculadora do Windows 11 (tema claro ou escuro, seguindo o
 Windows), com memória (MC, MR, M+, M−, MS), CE, 1/x, x², √x, histórico ao lado
@@ -24,7 +24,7 @@ A janela lembra o tamanho e a posição que você deixou (salvo em
 2. Em **Artifacts**, baixe **Calculadora-Windows** e descompacte.
 3. Rode `Instalar-Calculadora.exe`. Ele cria o atalho **Calculadora G3** na área de
    trabalho e no menu Iniciar (não pede senha de administrador). Para remover, use
-   *Configurações → Aplicativos*.
+   _Configurações → Aplicativos_.
 
 Se preferir não instalar, o `Calculadora.exe` do mesmo pacote abre direto.
 Na primeira vez o Windows SmartScreen pode avisar que o app é desconhecido:
