@@ -15,6 +15,8 @@ Visual igual ao da calculadora do Windows 11 (tema claro ou escuro, seguindo o
 Windows), com memória (MC, MR, M+, M−, MS), CE, 1/x, x², √x, histórico ao lado
 quando a janela fica larga e atalhos de teclado (números, `+ - * /`, `%`,
 `Enter` = igual, `Backspace` apaga, `Esc` limpa, `Delete` = CE).
+A janela lembra o tamanho e a posição que você deixou (salvo em
+`%APPDATA%\CalculadoraG3\janela.json`).
 
 ## Instalar no Windows
 

@@ -5,7 +5,9 @@ Execute com:  python calculadora.py
 
 from __future__ import annotations
 
+import json
 import os
+import re
 import sys
 import tkinter as tk
 import tkinter.font as tkfont
@@ -15,6 +17,53 @@ from calc_engine import (DIVIDE, MINUS, PLUS, TIMES, Calculator, display,
                          format_number)
 
 APP_ID = "G3.CalculadoraCelular"
+DEFAULT_GEOMETRY = "340x540"
+
+
+# --------------------------------------------------------------------------
+# Tamanho e posição da janela, lembrados entre aberturas
+# --------------------------------------------------------------------------
+
+def settings_path() -> str:
+    base = os.environ.get("APPDATA") or os.path.join(os.path.expanduser("~"), ".config")
+    return os.path.join(base, "CalculadoraG3", "janela.json")
+
+
+def load_window_settings() -> dict:
+    try:
+        with open(settings_path(), encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_window_settings(data: dict) -> None:
+    path = settings_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+    except OSError:
+        pass
+
+
+_GEOMETRY_RE = re.compile(r"^(\d+)x(\d+)([+-]-?\d+)([+-]-?\d+)$")
+
+
+def fit_geometry(geometry: str, screen_w: int, screen_h: int,
+                 min_w: int = 320, min_h: int = 500) -> str | None:
+    """Garante que a janela salva cabe e aparece na tela atual."""
+    m = _GEOMETRY_RE.match(geometry or "")
+    if not m:
+        return None
+    w, h = int(m.group(1)), int(m.group(2))
+    x, y = (int(g.replace("+", "", 1).replace("--", "-")) for g in (m.group(3), m.group(4)))
+    w = max(min_w, min(w, screen_w))
+    h = max(min_h, min(h, screen_h))
+    x = max(0, min(x, screen_w - w))
+    y = max(0, min(y, screen_h - h))
+    return f"{w}x{h}+{x}+{y}"
 
 
 # --------------------------------------------------------------------------
@@ -173,8 +222,20 @@ class App:
 
         root.title("Calculadora")
         root.configure(bg=T["bg"])
-        root.geometry("340x540")
         root.minsize(320, 500)
+        # a janela nunca muda de tamanho sozinha, só quando o usuário arrasta
+        root.pack_propagate(False)
+        saved = load_window_settings()
+        geometry = fit_geometry(saved.get("geometry", ""), root.winfo_screenwidth(),
+                                root.winfo_screenheight())
+        root.geometry(geometry or DEFAULT_GEOMETRY)
+        if saved.get("zoomed"):
+            try:
+                root.state("zoomed")
+            except tk.TclError:
+                pass
+        self._save_job = None
+        root.protocol("WM_DELETE_WINDOW", self.on_close)
         self._set_icon(root)
 
         # ---- coluna da calculadora ----
@@ -258,9 +319,29 @@ class App:
             except tk.TclError:
                 pass
 
+    def save_window(self):
+        self._save_job = None
+        try:
+            zoomed = self.root.state() == "zoomed"
+        except tk.TclError:
+            zoomed = False
+        data = load_window_settings()
+        data["zoomed"] = zoomed
+        if self.root.state() == "normal":
+            data["geometry"] = self.root.wm_geometry()
+        save_window_settings(data)
+
+    def on_close(self):
+        self.save_window()
+        self.root.destroy()
+
     def _on_resize(self, event):
         if event.widget is not self.root:
             return
+        # salva o tamanho um pouco depois de parar de arrastar
+        if self._save_job is not None:
+            self.root.after_cancel(self._save_job)
+        self._save_job = self.root.after(600, self.save_window)
         want = event.width >= self.SIDE_PANEL_MIN_WIDTH
         if want and not self.side_visible:
             self.side.pack(side="right", fill="y", before=self.main)
