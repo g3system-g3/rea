@@ -131,7 +131,7 @@ class App:
                                    anchor="e", font=(FONT_FAMILY, 44))
         self.preview_label.pack(side="bottom", fill="x")
         self.expr_label.pack(side="bottom", fill="x")
-        screen.bind("<Configure>", lambda e: self._fit_text())
+        self.expr_label.bind("<Configure>", lambda e: self._fit_text())
 
         # ---- Teclado ----
         pad = tk.Frame(root, bg=BG)
@@ -227,7 +227,9 @@ class App:
 
     def _fit_text(self):
         """Diminui a fonte do visor quando a conta fica comprida."""
-        width = max(100, self.expr_label.winfo_width() or 340)
+        width = self.expr_label.winfo_width()
+        if width < 50:  # janela ainda não desenhada
+            return
         text = self.expr_var.get()
         size = 48
         f = tkfont.Font(family=FONT_FAMILY, size=-size)
